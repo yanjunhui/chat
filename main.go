@@ -16,6 +16,8 @@ import (
 	"encoding/json"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
+	"os/exec"
+	"path/filepath"
 )
 
 
@@ -41,8 +43,8 @@ func main(){
 	web.Post("/sendmsg", SendMsg)
 
 	if port := GetConfig.GetValue("http", "port"); port == "no value" {
-		fmt.Println("获取配置文件Http服务端口服务,使用默认4567!")
-		WriteLog("获取配置文件Http服务端口服务,使用默认4567!")
+		fmt.Println("获取配置文件Http服务端口服务失败,使用默认4567!")
+		WriteLog("获取配置文件Http服务端口服务失败,使用默认4567!")
 		web.RunOnAddr(":4567")
 	} else {
 		WriteLog("启动 Http 服务")
@@ -168,8 +170,6 @@ func GetAccessTokenFromWeixin()(newAccess AccessToken, err error){
 	result, _ := client.Get(WxAccessTokenUrl)
 	res, err := ioutil.ReadAll(result.Body)
 
-	fmt.Println(string(res))
-
 	if err != nil{
 		WriteLog("获取微信 Token 返回数据错误: ", err)
 		return newAccess, err
@@ -188,12 +188,11 @@ func GetAccessTokenFromWeixin()(newAccess AccessToken, err error){
 
 //获取当前运行路径
 func GetWorkPath() (string) {
-	if dir, err := os.Getwd(); err == nil {
-		return dir + "/"
+	if file, err := exec.LookPath(os.Args[0]); err == nil {
+		return filepath.Dir(file) + "/"
 	}
 	return "./"
 }
-
 
 //写入日志
 func WriteLog(a ...interface{}) {
