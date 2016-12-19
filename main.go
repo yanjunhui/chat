@@ -38,7 +38,7 @@ func main() {
 		}),
 	)
 
-	web.Post("/wxauth", WxAuth)
+	web.Get("/wxauth", WxAuth)
 	web.Post("/sendmsg", SendMsg)
 
 	if port := GetConfig.GetValue("http", "port"); port == "no value" {
