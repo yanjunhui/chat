@@ -19,6 +19,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -70,6 +71,12 @@ func SendMsg(req *http.Request, ren render.Render) {
 
 	newContent := Content{
 		Content:content + "\n\n\n报警时间: " + time.Now().Local().Format("15点04分05秒"),
+	}
+
+	userList := strings.Split(toUser,",")
+
+	if len(userList) > 1 {
+		toUser = strings.Join(userList, "|")
 	}
 
 	newMsgPost := MsgPost{
