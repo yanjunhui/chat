@@ -28,7 +28,15 @@
 完成以上步骤后, 即可实用OpenFalcon发送信息,发送格式与 sender 符合:
     tos     微信用户名
     content 信息内容
+4. 修改 OpenFalcon 的 Sender 的配置文件 sms 的地址: http://IP:4567/sendmsg:
+	例如:
 
+```
+    "api": {
+        "sms": "http://yanjunhui.com:4567/sendmsg",
+        "mail": "http://11.11.11.11:9000/mail"
+    }
+```
 
 
 
