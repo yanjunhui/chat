@@ -122,15 +122,10 @@ func SendMsg(req *http.Request, ren render.Render) {
 
 //开启回调模式验证
 func WxAuth(req *http.Request, ren render.Render) {
-	body, err := ioutil.ReadAll(req.Body)
-	ren.Data(200, body)
-	WriteLog(string(body), err)
-
 	req.ParseForm()
-
 	echostr := req.FormValue("echostr")
 	if echostr == ""{
-		ren.Text(200,"无法获取请求参数, 请使用微信接口请求!")
+		ren.Text(200,"无法获取请求参数, 请使用微信请求接口!")
 		return
 	}
 	wByte, _ := base64.StdEncoding.DecodeString(echostr)
@@ -146,7 +141,7 @@ func WxAuth(req *http.Request, ren render.Render) {
 	appIDstart := 20 + length
 	id := x[appIDstart : int(appIDstart) + len(corpid)]
 	if string(id) == corpid {
-		fmt.Println(string(x[20:20 + length]))
+		WriteLog("微信微信的验证字符串为: ",string(x[20:20 + length]))
 		ren.Data(200, x[20:20 + length])
 	} else {
 		WriteLog("微信验证appID错误!")
