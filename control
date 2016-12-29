@@ -7,13 +7,13 @@
 #
 
 ### BEGIN INIT INFO
-# Provides:          xychat
+# Provides:          chat
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Start gogs at boot time.
-# Description:       Control gogs.
+# Short-Description: Start chat.
+# Description:       Control chat.
 ### END INIT INFO
 
 # Source function library.
