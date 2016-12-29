@@ -127,7 +127,12 @@ func WxAuth(req *http.Request, ren render.Render) {
 	WriteLog(string(body), err)
 
 	req.ParseForm()
-	echostr := req.Form["echostr"][0]
+
+	echostr := req.FormValue("echostr")
+	if echostr == ""{
+		ren.Text(200,"无法获取请求参数, 请使用微信接口请求!")
+		return
+	}
 	wByte, _ := base64.StdEncoding.DecodeString(echostr)
 	key, _ := base64.StdEncoding.DecodeString(key + "=")
 	keyByte := []byte(key)
