@@ -25,11 +25,13 @@
     > 4. 通讯录权限,全部勾选即可
     生成的Secret就是我们需要的 secret
 
-完成以上步骤后, 即可实用OpenFalcon发送信息,发送格式与 sender 符合:
+
+###完成以上步骤后, 即可实用OpenFalcon发送信息,发送格式与 sender 符合:
     tos     微信用户名
     content 信息内容
     
-4. 如果只需要微信提醒, 只修改 OpenFalcon 的 Sender 的配置文件 sms 的地址: http://IP:4567/sendmsg:
+
+1. 如果只需要微信提醒, 只修改 OpenFalcon 的 Sender 的配置文件 sms 的地址: http://IP:4567/sendmsg:
 	例如:
 
 ```
@@ -40,7 +42,7 @@
 ```
 
 
-5. 如果同时需要短信和微信提醒,可以使用修改版的[Sender](https://github.com/Yanjunhui/sender),配置如下:
+2. 如果同时需要短信和微信提醒,可以使用修改版的[Sender](https://github.com/Yanjunhui/sender),配置如下:
 ```
     "api": {
         "sms": "http://11.11.11.11:8000/sms",
