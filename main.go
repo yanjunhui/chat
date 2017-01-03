@@ -69,8 +69,27 @@ func SendMsg(req *http.Request, ren render.Render) {
 	toUser := req.PostFormValue("tos")
 	content := req.PostFormValue("content")
 
+	info := ""
+	x := strings.Split(content, "]")
+	if len(x) > 1 {
+		for _, v := range x {
+			y := strings.Split(v, "[")
+			if len(y) > 1 {
+				for _, c := range y {
+					if c != "" {
+						if info == "" {
+							info += c
+						} else {
+							info = info + "\n" + c
+						}
+					}
+				}
+			}
+		}
+	}
+
 	newContent := Content{
-		Content:content + "\n\n\n报警时间: " + time.Now().Local().Format("15点04分05秒"),
+		Content:info,
 	}
 
 	userList := strings.Split(toUser,",")
