@@ -54,15 +54,12 @@ func main() {
 
 
 //发送信息
-type Content struct {
-	Content string `json:"content"`
-}
 
 type MsgPost struct {
 	ToUser  string `json:"touser"`
 	MsgType string `json:"msgtype"`
 	AgentID int `json:"agentid"`
-	Text    Content `json:"text"`
+	Text   string `json:"text"`
 }
 
 func SendMsg(req *http.Request, ren render.Render) {
@@ -89,6 +86,9 @@ func SendMsg(req *http.Request, ren render.Render) {
 	}else{
 		info = content
 	}
+
+
+
 
 	userList := strings.Split(toUser,",")
 
@@ -200,7 +200,8 @@ func GetAccessTokenFromWeixin() (newAccess AccessToken, err error) {
 	return newAccess, err
 }
 
-//微信请求
+
+//微信请求数据
 func WxPost(url string, data string)(string, error){
 	resp, err := http.Post(url,
 		"application/json",
