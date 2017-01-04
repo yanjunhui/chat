@@ -86,10 +86,8 @@ func SendMsg(req *http.Request, ren render.Render) {
 				}
 			}
 		}
-	}
-
-	newContent := Content{
-		Content:info,
+	}else{
+		info = content
 	}
 
 	userList := strings.Split(toUser,",")
@@ -98,12 +96,7 @@ func SendMsg(req *http.Request, ren render.Render) {
 		toUser = strings.Join(userList, "|")
 	}
 
-	newMsgPost := MsgPost{
-		ToUser:toUser,
-		MsgType:"text",
-		AgentID:0,
-		Text:newContent,
-	}
+	newTextMsg := "{\"touser\":\"" + toUser + "\",\"toparty\":\"\",\"totag\":0,\"msgtype\":\"text\",\"agentid\":0,\"text\":{\"content\":\"" + info +"\"},\"safe\":0}"
 
 	t := GetConfig.GetValue("token", "token")
 	if t == "no value"{
@@ -137,7 +130,7 @@ func SendMsg(req *http.Request, ren render.Render) {
 
 
 	url := "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + t
-	result, err := Post(url, newMsgPost)
+	result, err := WxPost(url, newTextMsg)
 	if err != nil {
 		WriteLog("请求微信错误!", err)
 		return
@@ -207,25 +200,25 @@ func GetAccessTokenFromWeixin() (newAccess AccessToken, err error) {
 	return newAccess, err
 }
 
+//微信请求
+func WxPost(url string, data string)(string, error){
+	resp, err := http.Post(url,
+		"application/json",
+		strings.NewReader(data))
 
-//无参数Post请求数据
-func Post(url string, data interface{}) (result []byte, err error) {
-	b, err := json.Marshal(data)
-	body := bytes.NewBuffer([]byte(b))
-	//请求日志写入
-	WriteLog("Post请求内容: " + body.String())
-	tr := &http.Transport{
-		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
-		DisableCompression: true,
-	}
-	client := &http.Client{Transport: tr, Timeout:10 * time.Second}
-	if res, err := client.Post(url, "application/json;charset=utf-8", body); err == nil {
-		result, err = ioutil.ReadAll(res.Body)
-		return result, err
-	} else {
+	if err != nil {
 		WriteLog("Post 请求失败:", err)
-		return result, err
+		return "", err
 	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		WriteLog("Post 请求失败:", err)
+		return "", err
+	}
+
+	return string(body), err
 }
 
 
