@@ -36,7 +36,7 @@
 
 ```
     "api": {
-        "sms": "http://yanjunhui.com:4567/sendmsg",
+        "sms": "http://yanjunhui.com:4567/send",
         "mail": "http://11.11.11.11:9000/mail"
     }
 ```
@@ -47,6 +47,6 @@
     "api": {
         "sms": "http://11.11.11.11:8000/sms",
         "mail": "http://11.11.11.11:9000/mail"
-        "chat": "http://11.11.11.11:4567/sendmsg"
+        "chat": "http://11.11.11.11:4567/send"
     }
 ```
