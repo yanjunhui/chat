@@ -73,8 +73,8 @@ type MsgPost struct {
 
 func SendMsg(context echo.Context) error {
 	toUser := context.FormValue("tos")
-	//content := context.FormValue("content")
-	content := "[P0][OK][192.168.11.26_ofmon][][【critical】与主mysql同步延迟超过10s！ all(#3) seconds_behind_master port=3306 0>10][O1 2017-04-17 08:55:00]"
+	content := context.FormValue("content")
+	//content := "[P0][OK][192.168.11.26_ofmon][][【critical】与主mysql同步延迟超过10s！ all(#3) seconds_behind_master port=3306 0>10][O1 2017-04-17 08:55:00]"
 	content = strings.Replace(content, "][", "]\n[", -1)
 
 	if userList := strings.Split(toUser, ","); len(userList) > 1 {
