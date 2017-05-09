@@ -31,6 +31,24 @@
     content 信息内容
     
 
+OpenFalcon+:
+
+修改配置文件 https://github.com/open-falcon/falcon-plus/blob/master/modules/alarm/cfg.example.json#L25
+
+```
+"api": {
+        "sms": "http://yanjunhui.com:4567/send",
+        "mail": "http://127.0.0.1:10086/mail",
+        "dashboard": "http://127.0.0.1:8081",
+        "plus_api":"http://127.0.0.1:8080",
+        "plus_api_token": "used-by-alarm-in-server-side-and-disabled-by-set-to-blank"
+    },
+```
+
+
+
+
+
 1. 如果只需要微信提醒, 只修改 OpenFalcon 的 Sender 的配置文件 sms 的地址: http://IP:4567/sendmsg:
 	例如:
 
