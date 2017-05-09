@@ -1,156 +1,138 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"net/http"
-	"time"
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"bytes"
-	"github.com/yanjunhui/goini"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/binary"
-	"crypto/tls"
+	"github.com/kataras/go-errors"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+	"github.com/labstack/gommon/log"
+	"github.com/patrickmn/go-cache"
+	"github.com/yanjunhui/chat/json"
+	"github.com/yanjunhui/goini"
 	"io/ioutil"
-	"encoding/json"
-	"github.com/go-martini/martini"
-	"github.com/martini-contrib/render"
+	"net/http"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
-	WorkPath = GetWorkPath()
-	GetConfig = goini.SetConfig(WorkPath + "config.conf")
-	corpid = GetConfig.GetValue("weixin", "corpid")
-	key = GetConfig.GetValue("weixin", "key")
-	secret = GetConfig.GetValue("weixin", "secret")
+	WorkPath       = GetWorkPath()
+	GetConfig      = goini.SetConfig(WorkPath + "config.conf")
+	corpId         = GetConfig.GetValue("weixin", "corpid")
+	EncodingAESKey = GetConfig.GetValue("weixin", "EncodingAESKey")
+	secret         = GetConfig.GetValue("weixin", "secret")
+	agentId        = GetConfig.GetValue("weixin", "agentid")
+
+	TokenCache *cache.Cache
 )
 
-func main() {
-	web := martini.Classic()
-	web.Use(
-		render.Renderer(render.Options{
-			IndentJSON: true,
-			Charset: "UTF-8",
-		}),
-	)
-
-	web.Get("/wxauth", WxAuth)
-	web.Post("/sendmsg", SendMsg)
-
-	if port := GetConfig.GetValue("http", "port"); port == "no value" {
-		fmt.Println("获取配置文件Http服务端口服务失败,使用默认4567!")
-		WriteLog("获取配置文件Http服务端口服务失败,使用默认4567!")
-		web.RunOnAddr(":4567")
-	} else {
-		WriteLog("启动 Http 服务")
-		web.RunOnAddr(":" + port)
-	}
+func init() {
+	TokenCache = cache.New(6000*time.Second, 5*time.Second)
 }
 
+func main() {
+
+	go GetAccessTokenFromWeixin()
+
+	e := echo.New()
+	e.Logger.SetLevel(log.INFO)
+	e.Use(middleware.Logger())
+	e.GET("/auth", WxAuth)
+	e.POST("/send", SendMsg)
+
+	port := GetConfig.GetValue("http", "port")
+	if port == "no value" {
+		e.Logger.Fatal(e.Start("0.0.0.0:4567"))
+	} else {
+		e.Logger.Fatal(e.Start("0.0.0.0:" + port))
+	}
+}
 
 //发送信息
-
-type MsgPost struct {
-	ToUser  string `json:"touser"`
-	MsgType string `json:"msgtype"`
-	AgentID int `json:"agentid"`
-	Text   string `json:"text"`
+type Content struct {
+	Content string `json:"content"`
 }
 
-func SendMsg(req *http.Request, ren render.Render) {
-	toUser := req.PostFormValue("tos")
-	content := req.PostFormValue("content")
+type MsgPost struct {
+	ToUser  string  `json:"touser"`
+	MsgType string  `json:"msgtype"`
+	ToTag   int     `json:"totag"`
+	AgentID int     `json:"agentid"`
+	Text    Content `json:"text"`
+	Safe    int
+}
 
-	info := ""
-	x := strings.Split(content, "]")
-	if len(x) > 1 {
-		for _, v := range x {
-			y := strings.Split(v, "[")
-			if len(y) > 1 {
-				for _, c := range y {
-					if c != "" {
-						if info == "" {
-							info += c
-						} else {
-							info = info + "\n" + c
-						}
-					}
-				}
-			}
-		}
-	}else{
-		info = content
-	}
+func SendMsg(context echo.Context) error {
+	toUser := context.FormValue("tos")
+	//content := context.FormValue("content")
+	content := "[P0][OK][192.168.11.26_ofmon][][【critical】与主mysql同步延迟超过10s！ all(#3) seconds_behind_master port=3306 0>10][O1 2017-04-17 08:55:00]"
+	content = strings.Replace(content, "][", "]\n[", -1)
 
-
-
-
-	userList := strings.Split(toUser,",")
-
-	if len(userList) > 1 {
+	if userList := strings.Split(toUser, ","); len(userList) > 1 {
 		toUser = strings.Join(userList, "|")
 	}
 
-	newTextMsg := "{\"touser\":\"" + toUser + "\",\"toparty\":\"\",\"totag\":0,\"msgtype\":\"text\",\"agentid\":0,\"text\":{\"content\":\"" + info +"\"},\"safe\":0}"
+	text := Content{}
+	text.Content = content
 
-	t := GetConfig.GetValue("token", "token")
-	if t == "no value"{
-		token, err := GetAccessTokenFromWeixin()
-		if err != nil {
-			ren.Text(200, err.Error())
-			return
-		}
-		t = token.AccessToken
-		GetConfig.SetValue("token", "token", token.AccessToken)
-		GetConfig.SetValue("token", "timeout", Int64ToString(token.TimeOut))
+	msg := MsgPost{
+		ToUser:  toUser,
+		MsgType: "text",
+		AgentID: StringToInt(agentId),
+		Text:    text,
+		Safe:    0,
 	}
 
+	token, found := TokenCache.Get("token")
+	if !found {
+		log.Printf("token获取失败!")
+		return context.String(200, "token获取失败!")
+	}
+	accessToken, ok := token.(AccessToken)
+	if !ok {
+		return context.String(200, "token解析失败!")
+	}
 
-	timeoutStr := GetConfig.GetValue("token", "timeout")
-	timeout, err := StringToInt64(timeoutStr)
+	url := "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + accessToken.AccessToken
+	result, err := WxPost(url, msg)
 	if err != nil {
-		WriteLog("timeout转换类型失败!")
-		return
+		log.Printf("请求微信失败: %v", err)
 	}
-	if time.Now().Unix() > timeout {
-		token, err := GetAccessTokenFromWeixin()
-		if err != nil {
-			ren.Text(200, err.Error())
-			return
-		}
-		t = token.AccessToken
-		GetConfig.SetValue("token", "token", token.AccessToken)
-		GetConfig.SetValue("token", "timeout", Int64ToString(token.TimeOut))
-	}
-
-
-	url := "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + t
-	result, err := WxPost(url, newTextMsg)
-	if err != nil {
-		WriteLog("请求微信错误!", err)
-		return
-	}
-	WriteLog("发送信息给", toUser, string(result), "信息内容:", content)
-	ren.Text(200, string(result))
+	log.Printf("发送信息给%s, 信息内容: %s, 微信返回结果: %v", toUser, content, result)
+	return context.String(200, string(result))
 }
 
 //开启回调模式验证
-func WxAuth(req *http.Request, ren render.Render) {
-	req.ParseForm()
-	echostr := req.FormValue("echostr")
-	if echostr == ""{
-		ren.Text(200,"无法获取请求参数, 请使用微信请求接口!")
-		return
+func WxAuth(context echo.Context) error {
+
+	echostr := context.FormValue("echostr")
+	if echostr == "" {
+		return errors.New("无法获取请求参数, echostr 为空")
 	}
-	wByte, _ := base64.StdEncoding.DecodeString(echostr)
-	key, _ := base64.StdEncoding.DecodeString(key + "=")
+
+	wByte, err := base64.StdEncoding.DecodeString(echostr)
+	if err != nil {
+		return errors.New("接受微信请求参数 echostr base64解码失败(" + err.Error() + ")")
+	}
+	key, err := base64.StdEncoding.DecodeString(EncodingAESKey + "=")
+	if err != nil {
+		return errors.New("配置 EncodingAESKey base64解码失败(" + err.Error() + "), 请检查配置文件内 EncodingAESKey 是否和微信后台提供一致")
+	}
+
 	keyByte := []byte(key)
-	x, _ := AesDecrypt(wByte, keyByte)
+	x, err := AesDecrypt(wByte, keyByte)
+	if err != nil {
+		return errors.New("aes 解码失败(" + err.Error() + "), 请检查配置文件内 EncodingAESKey 是否和微信后台提供一致")
+	}
 
 	buf := bytes.NewBuffer(x[16:20])
 	var length int32
@@ -158,103 +140,92 @@ func WxAuth(req *http.Request, ren render.Render) {
 
 	//验证返回数据ID是否正确
 	appIDstart := 20 + length
-	id := x[appIDstart : int(appIDstart) + len(corpid)]
-	if string(id) == corpid {
-		WriteLog("微信微信的验证字符串为: ",string(x[20:20 + length]))
-		ren.Data(200, x[20:20 + length])
-	} else {
-		WriteLog("微信验证appID错误!")
+	if len(x) < int(appIDstart) {
+		return errors.New("获取数据错误, 请检查 EncodingAESKey 配置")
 	}
-	return
+	id := x[appIDstart : int(appIDstart)+len(corpId)]
+	if string(id) == corpId {
+		return context.JSONBlob(200, x[20:20+length])
+	}
+	return errors.New("微信验证appID错误, 微信请求值: " + string(id) + ", 配置文件内配置为: " + corpId)
 }
 
 type AccessToken struct {
 	AccessToken string `json:"access_token"`
-	ExpiresIn   int        `json:"expires_in"`
-	TimeOut     int64
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 //从微信获取 AccessToken
-func GetAccessTokenFromWeixin() (newAccess AccessToken, err error) {
+func GetAccessTokenFromWeixin() {
+	for {
+		WxAccessTokenUrl := "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + corpId + "&corpsecret=" + secret
 
-	WxAccessTokenUrl := "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + corpid + "&corpsecret=" + secret
+		tr := &http.Transport{
+			TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
+			DisableCompression: true,
+		}
+		client := &http.Client{Transport: tr}
+		result, err := client.Get(WxAccessTokenUrl)
+		if err != nil {
+			log.Printf("获取微信 Token 返回数据错误: %v", err)
+			return
+		}
 
-	tr := &http.Transport{
-		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
-		DisableCompression: true,
-	}
-	client := &http.Client{Transport: tr}
-	result, _ := client.Get(WxAccessTokenUrl)
-	res, err := ioutil.ReadAll(result.Body)
+		res, err := ioutil.ReadAll(result.Body)
 
-	if err != nil {
-		WriteLog("获取微信 Token 返回数据错误: ", err)
-		return newAccess, err
+		if err != nil {
+			log.Printf("获取微信 Token 返回数据错误: %v", err)
+			return
+		}
+		newAccess := AccessToken{}
+		err = json.Unmarshal(res, &newAccess)
+		if err != nil {
+			log.Printf("获取微信 Token 返回数据解析 Json 错误: %v", err)
+			return
+		}
+		//延迟时间
+		waitTime := 200
+		TokenCache.Set("token", newAccess, time.Duration(newAccess.ExpiresIn-waitTime)*time.Second)
+		log.Printf("微信 Token 更新成功: %s,有效时间: %v", newAccess.AccessToken, newAccess.ExpiresIn)
+		time.Sleep(time.Duration(newAccess.ExpiresIn-waitTime) * time.Second)
 	}
-	err = json.Unmarshal(res, &newAccess)
-	if err != nil {
-		WriteLog("获取微信 Token 返回数据解析 Json 错误: ", err)
-		return newAccess, err
-	}
-	newAccess.TimeOut = time.Now().Unix() + int64(newAccess.ExpiresIn) - 1000
-	return newAccess, err
 }
 
-
 //微信请求数据
-func WxPost(url string, data string)(string, error){
-	resp, err := http.Post(url,
-		"application/json",
-		strings.NewReader(data))
+func WxPost(url string, data MsgPost) (string, error) {
 
+	jsonBody, err := json.Marshal(data)
 	if err != nil {
-		WriteLog("Post 请求失败:", err)
 		return "", err
 	}
 
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	r, err := http.Post(url, "application/text;charset=utf-8", bytes.NewReader(jsonBody))
 	if err != nil {
-		WriteLog("Post 请求失败:", err)
+		return "", err
+	}
+
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
 		return "", err
 	}
 
 	return string(body), err
 }
 
-
 //获取当前运行路径
-func GetWorkPath() (string) {
+func GetWorkPath() string {
 	if file, err := exec.LookPath(os.Args[0]); err == nil {
 		return filepath.Dir(file) + "/"
 	}
 	return "./"
 }
 
-//int64 类型转 string
-func Int64ToString(i int64) string {
-	return strconv.FormatInt(i, 10)
-}
-
-//string 类型转 int64
-func StringToInt64(s string) (int64, error) {
-	return strconv.ParseInt(s, 10, 64)
-}
-
-//写入日志
-func WriteLog(a ...interface{}) {
-	t := time.Now().Format("2006年01月02日15点04分05秒")
-	f, _ := os.OpenFile(WorkPath + "info.log", os.O_CREATE | os.O_APPEND | os.O_RDWR, 0660)
-	defer f.Close()
-	fmt.Fprintln(f, t, a)
-}
-
-
-
 //AES解密
 func AesDecrypt(crypted, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
+		log.Printf("aes解密失败: %v", err)
 		return nil, err
 	}
 	blockSize := block.BlockSize()
@@ -267,6 +238,16 @@ func AesDecrypt(crypted, key []byte) ([]byte, error) {
 
 func PKCS5UnPadding(origData []byte) []byte {
 	length := len(origData)
-	unpadding := int(origData[length - 1])
+	unpadding := int(origData[length-1])
 	return origData[:(length - unpadding)]
+}
+
+//string 类型转 int
+func StringToInt(s string) int {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		log.Printf("agent 类型转换失败, 请检查配置文件中 agentid 配置是否为纯数字(%v)", err)
+		return 0
+	}
+	return n
 }
