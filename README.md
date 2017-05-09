@@ -13,7 +13,7 @@
     将 CorpID 配置到配置文件 config.conf 内,在有公网IP运行的机器上运行,可以被外部访问
 2. 开启回调模式获取key
     登录后,左侧菜单[应用中心] ----> 自建应用 ----> 企业小助手 --->模式选择 ----> 回调模式
-    > * URL: 填写你服务器地址:端口/wxauth( 例如: http://yanjunhui.com:4567/wxauth )
+    > * URL: 填写你服务器地址:端口/wxauth( 例如: http://yanjunhui.com:4567/auth )
     > * Token: 随机获取(这个发送信息用不到,可忽略)
     > * EncodingAESKey: 随机获取,就是我们在配置文件配置的 key
 
