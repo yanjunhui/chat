@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"github.com/kataras/go-errors"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -41,7 +40,7 @@ func init() {
 }
 
 func main() {
-	fmt.Println(WorkPath)
+
 	go GetAccessTokenFromWeixin()
 
 	e := echo.New()
