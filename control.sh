@@ -20,7 +20,7 @@
 . /etc/init.d/functions
 
 #工作目录
-workPath=`pwd`
+workPath=$(cd $(dirname $0)/; pwd)
 
 bin=$workPath/main
 pidFile=$workPath/pid
