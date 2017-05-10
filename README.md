@@ -31,7 +31,7 @@
     content 信息内容
     
 
-OpenFalcon+:
+###OpenFalcon+:
 
 修改配置文件 https://github.com/open-falcon/falcon-plus/blob/master/modules/alarm/cfg.example.json#L25
 
@@ -47,7 +47,7 @@ OpenFalcon+:
 
 
 
-
+###OpenFalcon
 
 1. 如果只需要微信提醒, 只修改 OpenFalcon 的 Sender 的配置文件 sms 的地址: http://IP:4567/sendmsg:
 	例如:
@@ -68,3 +68,9 @@ OpenFalcon+:
         "chat": "http://11.11.11.11:4567/send"
     }
 ```
+
+###使用
+> 1. 启动 `./control.sh start`
+> 2. 停止 `./control.sh stop`
+> 3. 重启 `./control.sh restart`
+> 4. 状态 `./control.sh status`
