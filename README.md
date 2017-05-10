@@ -5,20 +5,27 @@
 ---
 
 ### 一.申请企业号
+
 1. 以个人邮箱申请就可以, 不通过企业认证的话,有200人的限制,一般足够用了
 
 ### 二.获取对接权限
 1. 获取corpid
-    登录后,我的企业 ----> 企业信息  --> CorpID
-    将 CorpID 配置到配置文件 config.conf 内 的 CorpID
+
+  * 登录后,我的企业 ----> 企业信息  --> CorpID
     
-    ![](images/CropID.png)
+  * 将 CorpID 配置到配置文件 config.conf 内 的 CorpID
+    
+   ![](images/CropID.png)
     
     
 2. 开启回调模式获取key
-    登录后,顶部菜单[企业应用] ----> 添加应用
-    进入新添加的应用
-    拿到 AgentId 和 Secret
+
+   * 登录后,顶部菜单[企业应用] ----> 添加应用
+    
+   * 进入新添加的应用
+    
+   * 拿到 AgentId 和 Secret
+    
     ![](images/AgentId.png)
     
     
