@@ -83,7 +83,9 @@
 ```
 
 ### 使用
-> 1. 启动 `./control.sh start`
-> 2. 停止 `./control.sh stop`
-> 3. 重启 `./control.sh restart`
-> 4. 状态 `./control.sh status`
+> 1. clone 文件 `git clone https://www.github.com/yanjunhui/chat.git`
+> 2. 打开目录 `cd chat`
+> 3. 启动 `./control.sh start`
+> 4. 停止 `./control.sh stop`
+> 5. 重启 `./control.sh restart`
+> 6. 状态 `./control.sh status`
