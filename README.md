@@ -4,18 +4,18 @@
 
 ---
 
-###一.申请企业号
+### 一.申请企业号
 1. 以个人邮箱申请就可以, 不通过企业认证的话,有200人的限制,一般足够用了
 
-###二.获取对接权限
+### 二.获取对接权限
 1. 获取corpid
     登录后,左侧菜单[设置] ----> 右侧帐号信息的 CorpID
     将 CorpID 配置到配置文件 config.conf 内,在有公网IP运行的机器上运行,可以被外部访问
 2. 开启回调模式获取key
     登录后,左侧菜单[应用中心] ----> 自建应用 ----> 企业小助手 --->模式选择 ----> 回调模式
-    > * URL: 填写你服务器地址:端口/wxauth( 例如: http://yanjunhui.com:4567/auth )
-    > * Token: 随机获取(这个发送信息用不到,可忽略)
-    > * EncodingAESKey: 随机获取,就是我们在配置文件配置的 key
+    > 1. URL: 填写你服务器地址:端口/wxauth( 例如: http://yanjunhui.com:4567/auth )
+    > 2. Token: 随机获取(这个发送信息用不到,可忽略)
+    > 3. EncodingAESKey: 随机获取,就是我们在配置文件配置的 key
 
 3. secret
     登录后,左侧菜单 [设置] ----> 权限管理
@@ -26,12 +26,12 @@
     生成的Secret就是我们需要的 secret
 
 
-###完成以上步骤后, 即可实用OpenFalcon发送信息,发送格式与 sender 符合:
+### 完成以上步骤后, 即可实用OpenFalcon发送信息,发送格式与 sender 符合:
     tos     微信用户名
     content 信息内容
     
 
-###OpenFalcon+:
+### OpenFalcon+ 配置:
 
 修改配置文件 https://github.com/open-falcon/falcon-plus/blob/master/modules/alarm/cfg.example.json#L25
 
@@ -47,7 +47,7 @@
 
 
 
-###OpenFalcon
+### OpenFalcon 配置
 
 1. 如果只需要微信提醒, 只修改 OpenFalcon 的 Sender 的配置文件 sms 的地址: http://IP:4567/sendmsg:
 	例如:
@@ -69,7 +69,7 @@
     }
 ```
 
-###使用
+### 使用
 > 1. 启动 `./control.sh start`
 > 2. 停止 `./control.sh stop`
 > 3. 重启 `./control.sh restart`
