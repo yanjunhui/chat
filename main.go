@@ -28,9 +28,9 @@ var (
 	WorkPath       = GetWorkPath()
 	GetConfig      = goini.SetConfig(WorkPath + "config.conf")
 	corpId         = GetConfig.GetValue("weixin", "CorpID")
-	EncodingAESKey = GetConfig.GetValue("weixin", "EncodingAESKey")
-	secret         = GetConfig.GetValue("weixin", "Secret")
 	agentId        = GetConfig.GetValue("weixin", "AgentId")
+	secret         = GetConfig.GetValue("weixin", "Secret")
+	EncodingAESKey = GetConfig.GetValue("weixin", "EncodingAESKey")
 
 	TokenCache *cache.Cache
 )
@@ -65,10 +65,8 @@ type Content struct {
 type MsgPost struct {
 	ToUser  string  `json:"touser"`
 	MsgType string  `json:"msgtype"`
-	ToTag   int     `json:"totag"`
 	AgentID int     `json:"agentid"`
 	Text    Content `json:"text"`
-	Safe    int
 }
 
 func SendMsg(context echo.Context) error {
@@ -96,7 +94,6 @@ func SendMsg(context echo.Context) error {
 		MsgType: "text",
 		AgentID: StringToInt(agentId),
 		Text:    text,
-		Safe:    0,
 	}
 
 	token, found := TokenCache.Get("token")
@@ -110,6 +107,7 @@ func SendMsg(context echo.Context) error {
 	}
 
 	url := "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + accessToken.AccessToken
+
 	result, err := WxPost(url, msg)
 	if err != nil {
 		log.Printf("请求微信失败: %v", err)
@@ -174,8 +172,6 @@ func GetAccessTokenFromWeixin() {
 		}
 
 		WxAccessTokenUrl := "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + corpId + "&corpsecret=" + secret
-
-		log.Printf("WxAccessTokenUrl: %v", WxAccessTokenUrl)
 
 		tr := &http.Transport{
 			TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},

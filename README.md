@@ -58,6 +58,7 @@
 
 
 2. 如果同时需要短信和微信提醒,可以使用修改版的[Sender](https://github.com/Yanjunhui/sender),配置如下:
+
 ```
     "api": {
         "sms": "http://11.11.11.11:8000/sms",
