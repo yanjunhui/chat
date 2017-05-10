@@ -7,12 +7,13 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
 	"github.com/kataras/go-errors"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/patrickmn/go-cache"
-	"github.com/yanjunhui/chat/json"
 	"github.com/yanjunhui/goini"
 	"io/ioutil"
 	"net/http"
@@ -40,7 +41,7 @@ func init() {
 }
 
 func main() {
-
+	fmt.Println(WorkPath)
 	go GetAccessTokenFromWeixin()
 
 	e := echo.New()
@@ -153,12 +154,22 @@ func WxAuth(context echo.Context) error {
 type AccessToken struct {
 	AccessToken string `json:"access_token"`
 	ExpiresIn   int    `json:"expires_in"`
+	ErrCode     int    `json:"errcode"`
+	ErrMsg      string `json:"errmsg"`
 }
 
 //从微信获取 AccessToken
 func GetAccessTokenFromWeixin() {
+
 	for {
+		if corpId == "" || secret == "" {
+			log.Printf("corpId或者secret 获取失败, 请检查配置文件")
+			return
+		}
+
 		WxAccessTokenUrl := "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + corpId + "&corpsecret=" + secret
+
+		log.Printf("WxAccessTokenUrl: %v", WxAccessTokenUrl)
 
 		tr := &http.Transport{
 			TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
@@ -183,23 +194,28 @@ func GetAccessTokenFromWeixin() {
 			log.Printf("获取微信 Token 返回数据解析 Json 错误: %v", err)
 			return
 		}
+
+		if newAccess.ExpiresIn == 0 || newAccess.AccessToken == "" {
+			log.Printf("获取微信错误代码: %v, 错误信息: %v", newAccess.ErrCode, newAccess.ErrMsg)
+			time.Sleep(5 * time.Minute)
+		}
+
 		//延迟时间
-		waitTime := 200
-		TokenCache.Set("token", newAccess, time.Duration(newAccess.ExpiresIn-waitTime)*time.Second)
+		TokenCache.Set("token", newAccess, time.Duration(newAccess.ExpiresIn)*time.Second)
 		log.Printf("微信 Token 更新成功: %s,有效时间: %v", newAccess.AccessToken, newAccess.ExpiresIn)
-		time.Sleep(time.Duration(newAccess.ExpiresIn-waitTime) * time.Second)
+		time.Sleep(time.Duration(newAccess.ExpiresIn-100) * time.Second)
 	}
+
 }
 
 //微信请求数据
 func WxPost(url string, data MsgPost) (string, error) {
-
-	jsonBody, err := json.Marshal(data)
+	jsonBody, err := encodeJson(data)
 	if err != nil {
 		return "", err
 	}
 
-	r, err := http.Post(url, "application/text;charset=utf-8", bytes.NewReader(jsonBody))
+	r, err := http.Post(url, "application/json;charset=utf-8", bytes.NewReader(jsonBody))
 	if err != nil {
 		return "", err
 	}
@@ -250,4 +266,15 @@ func StringToInt(s string) int {
 		return 0
 	}
 	return n
+}
+
+//json序列化(禁止 html 符号转义)
+func encodeJson(v interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(v); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
