@@ -49,7 +49,8 @@
 
 ```
 "api": {
-        "sms": "http://yanjunhui.com:4567/send",
+	"im": "http://yanjunhui.com:4567/send",
+        "sms": "http://127.0.0.1:10086/sms",
         "mail": "http://127.0.0.1:10086/mail",
         "dashboard": "http://127.0.0.1:8081",
         "plus_api":"http://127.0.0.1:8080",
