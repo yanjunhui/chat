@@ -40,7 +40,7 @@
 
 ## 完成以上步骤后, 即可实用OpenFalcon发送信息,发送格式与 sender 符合:
 
-    tos     微信用户名
+    tos     微信用户名
     content 信息内容
     
 
