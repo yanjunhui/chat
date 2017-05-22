@@ -48,6 +48,8 @@
 
 ### 在falcon+的 im 配置, 注意是微信企业号内的用户名称, 而不是用户个人的个人微信号
 
+![](images/im.png)
+
 修改配置文件 https://github.com/open-falcon/falcon-plus/blob/master/modules/alarm/cfg.example.json#L25
 
 ```
@@ -93,3 +95,5 @@
 > 4. 停止 `./control.sh stop`
 > 5. 重启 `./control.sh restart`
 > 6. 状态 `./control.sh status`
+
+
