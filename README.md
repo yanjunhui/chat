@@ -39,11 +39,12 @@
 	![](images/关注.png)
 
 ### 完成以上步骤后, 即可实用OpenFalcon发送信息,发送格式与 sender 符合:
-    tos     微信用户名(在falcon+的im配置里面, 注意 ** 是微信企业号内的用户名称, 而不是用户个人的个人微信号 **)
+    tos     微信用户名
     content 信息内容
     
 
 ### OpenFalcon+ 配置:
+####在falcon+的im配置里面, 注意 ** 是微信企业号内的用户名称, 而不是用户个人的个人微信号 **
 
 修改配置文件 https://github.com/open-falcon/falcon-plus/blob/master/modules/alarm/cfg.example.json#L25
 
