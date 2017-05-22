@@ -4,11 +4,11 @@
 
 ---
 
-### 一.申请企业号
+## 一.申请企业号
 
 1. 以个人邮箱申请就可以, 不通过企业认证的话,有200人的限制,一般足够用了
 
-### 二.获取对接权限
+## 二.获取对接权限
 1. 获取corpid
 
   * 登录后,我的企业 ----> 企业信息  --> CorpID
@@ -38,13 +38,14 @@
 	
 	![](images/关注.png)
 
-### 完成以上步骤后, 即可实用OpenFalcon发送信息,发送格式与 sender 符合:
+## 完成以上步骤后, 即可实用OpenFalcon发送信息,发送格式与 sender 符合:
     tos     微信用户名
     content 信息内容
     
 
-### OpenFalcon+ 配置:
-####在falcon+的im配置里面, 注意 ** 是微信企业号内的用户名称, 而不是用户个人的个人微信号 **
+## OpenFalcon+ 配置:
+
+### 在falcon+的 im 配置, 注意是微信企业号内的用户名称, 而不是用户个人的个人微信号
 
 修改配置文件 https://github.com/open-falcon/falcon-plus/blob/master/modules/alarm/cfg.example.json#L25
 
@@ -61,7 +62,7 @@
 
 
 
-### OpenFalcon 配置
+## OpenFalcon 配置
 
 1. 如果只需要微信提醒, 只修改 OpenFalcon 的 Sender 的配置文件 sms 的地址: http://IP:4567/sendmsg:
 	例如:
