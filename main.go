@@ -8,12 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
-	"github.com/kataras/go-errors"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-	"github.com/labstack/gommon/log"
-	"github.com/patrickmn/go-cache"
-	"github.com/yanjunhui/goini"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -22,6 +16,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/kataras/go-errors"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+	"github.com/labstack/gommon/log"
+	"github.com/patrickmn/go-cache"
+	"github.com/yanjunhui/goini"
 )
 
 var (
@@ -180,32 +181,37 @@ func GetAccessTokenFromWeixin() {
 		client := &http.Client{Transport: tr}
 		result, err := client.Get(WxAccessTokenUrl)
 		if err != nil {
-			log.Printf("获取微信 Token 返回数据错误: %v", err)
-			return
+			log.Printf("获取微信 Token 返回数据错误: %v, 10秒后重试!", err)
+			time.Sleep(10 * time.Second)
+			continue
 		}
 
 		res, err := ioutil.ReadAll(result.Body)
 
 		if err != nil {
-			log.Printf("获取微信 Token 返回数据错误: %v", err)
-			return
+			log.Printf("获取微信 Token 返回数据错误: %v, 10秒后重试!", err)
+			time.Sleep(10 * time.Second)
+			continue
 		}
 		newAccess := AccessToken{}
 		err = json.Unmarshal(res, &newAccess)
 		if err != nil {
-			log.Printf("获取微信 Token 返回数据解析 Json 错误: %v", err)
-			return
+			log.Printf("获取微信 Token 返回数据解析 Json 错误: %v, 10秒后重试!", err)
+			time.Sleep(10 * time.Second)
+			continue
 		}
 
 		if newAccess.ExpiresIn == 0 || newAccess.AccessToken == "" {
-			log.Printf("获取微信错误代码: %v, 错误信息: %v", newAccess.ErrCode, newAccess.ErrMsg)
-			time.Sleep(5 * time.Minute)
+			log.Printf("获取微信错误代码: %v, 错误信息: %v, 10秒后重试!", newAccess.ErrCode, newAccess.ErrMsg)
+			time.Sleep(10 * time.Second)
+			continue
 		}
 
 		//延迟时间
 		TokenCache.Set("token", newAccess, time.Duration(newAccess.ExpiresIn)*time.Second)
 		log.Printf("微信 Token 更新成功: %s,有效时间: %v", newAccess.AccessToken, newAccess.ExpiresIn)
-		time.Sleep(time.Duration(newAccess.ExpiresIn-100) * time.Second)
+		time.Sleep(time.Duration(newAccess.ExpiresIn-1000) * time.Second)
+
 	}
 
 }
