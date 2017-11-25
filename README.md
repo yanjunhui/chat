@@ -63,31 +63,6 @@
     },
 ```
 
-
-
-## OpenFalcon 配置
-
-1. 如果只需要微信提醒, 只修改 OpenFalcon 的 Sender 的配置文件 sms 的地址: http://IP:4567/sendmsg:
-	例如:
-
-```
-    "api": {
-        "sms": "http://yanjunhui.com:4567/send",
-        "mail": "http://11.11.11.11:9000/mail"
-    }
-```
-
-
-2. 如果同时需要短信和微信提醒,可以使用修改版的[Sender](https://github.com/Yanjunhui/sender),配置如下:
-
-```
-    "api": {
-        "sms": "http://11.11.11.11:8000/sms",
-        "mail": "http://11.11.11.11:9000/mail"
-        "chat": "http://11.11.11.11:4567/send"
-    }
-```
-
 ### 使用
 > 1. clone 文件 `git clone https://www.github.com/yanjunhui/chat.git`
 > 2. 打开目录 `cd chat`
