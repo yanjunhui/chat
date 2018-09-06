@@ -28,7 +28,13 @@ var (
 	agentId        = GetConfig.GetValue("weixin", "AgentId")
 	secret         = GetConfig.GetValue("weixin", "Secret")
 	EncodingAESKey = GetConfig.GetValue("weixin", "EncodingAESKey")
+
+	client *crop.CropClient
 )
+
+func init() {
+	client = crop.New(corpId, EncodingAESKey, StringToInt(agentId), secret)
+}
 
 func main() {
 
@@ -66,8 +72,6 @@ func SendMsg(ctx echo.Context) error {
 	} else {
 		text = content
 	}
-
-	client := crop.New(corpId, EncodingAESKey, StringToInt(agentId), secret)
 
 	msg := crop.Message{}
 	msg.ToUser = toUser
