@@ -78,7 +78,7 @@ func SendMsg(ctx echo.Context) error {
 	msg.MsgType = "text"
 	msg.Text = crop.Content{text}
 
-	log.Printf("发送告警信息: %s, 接收用户: %s", text, toUser)
+	log.Printf("发送告警信息: %s, 接收用户: %s", content, toUser)
 
 	err := client.Send(msg)
 	if err != nil {
