@@ -12,11 +12,13 @@ import (
 	"time"
 )
 
+// Err 微信返回错误
 type Err struct {
 	ErrCode int    `json:"errcode"`
 	ErrMsg  string `json:"errmsg"`
 }
 
+//AccessToken 微信企业号请求Token
 type AccessToken struct {
 	AccessToken string `json:"access_token"`
 	ExpiresIn   int    `json:"expires_in"`
@@ -24,14 +26,15 @@ type AccessToken struct {
 	ExpiresInTime time.Time
 }
 
-type CropClient struct {
-	CropId         string
-	EncodingAESKey string
-	AgentId        int
-	AgentSecret    string
-	Token          AccessToken
+//Client 微信企业号应用配置信息
+type Client struct {
+	CropID      string
+	AgentID     int
+	AgentSecret string
+	Token       AccessToken
 }
 
+//Result 发送消息返回结果
 type Result struct {
 	Err
 	InvalidUser  string `json:"invaliduser"`
@@ -39,10 +42,12 @@ type Result struct {
 	InvalidTag   string `json:"invalidtag"`
 }
 
+//Content 文本消息内容
 type Content struct {
 	Content string `json:"content"`
 }
 
+//Message 消息主体参数
 type Message struct {
 	ToUser  string  `json:"touser"`
 	ToParty string  `json:"toparty"`
@@ -52,24 +57,25 @@ type Message struct {
 	Text    Content `json:"text"`
 }
 
-func New(cropId string, key string, agentId int, AgentSecret string) *CropClient {
+//New 实例化微信企业号应用
+func New(cropID string, agentID int, AgentSecret string) *Client {
 
-	c := new(CropClient)
-	c.CropId = cropId
-	c.EncodingAESKey = key
-	c.AgentId = agentId
+	c := new(Client)
+	c.CropID = cropID
+	c.AgentID = agentID
 	c.AgentSecret = AgentSecret
 	return c
 }
 
-func (c *CropClient) Send(msg Message) error {
+//Send 发送信息
+func (c *Client) Send(msg Message) error {
 
 	c.GetAccessToken()
 
-	msg.AgentID = c.AgentId
+	msg.AgentID = c.AgentID
 	url := "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + c.Token.AccessToken
 
-	resultByte, err := JsonPost(url, msg)
+	resultByte, err := JSONPost(url, msg)
 	if err != nil {
 		err = errors.New("请求微信接口失败: " + err.Error())
 		log.Println(err)
@@ -90,18 +96,19 @@ func (c *CropClient) Send(msg Message) error {
 
 	}
 
-	if result.InvalidUser != "" {
-		err = errors.New(fmt.Sprintf("消息发送成功, 但是有部分目标无法送达: %s%s%s", result.InvalidUser, result.InvalidParty, result.InvalidTag))
+	if result.InvalidUser != "" || result.InvalidTag != "" || result.InvalidParty != "" {
+		err = fmt.Errorf("消息发送成功, 但是有部分目标无法送达: %s%s%s", result.InvalidUser, result.InvalidParty, result.InvalidTag)
 		log.Println(err)
 	}
 
 	return err
 }
 
-func (c *CropClient) GetAccessToken() {
+//GetAccessToken 获取回话token
+func (c *Client) GetAccessToken() {
 	var err error
 	if c.Token.AccessToken == "" || c.Token.ExpiresInTime.Before(time.Now()) {
-		c.Token, err = getAccessTokenFromWeixin(c.CropId, c.AgentSecret)
+		c.Token, err = getAccessTokenFromWeixin(c.CropID, c.AgentSecret)
 		if err != nil {
 			log.Println("获取token失败: ", err)
 			return
@@ -111,15 +118,15 @@ func (c *CropClient) GetAccessToken() {
 }
 
 //从微信服务器获取token
-func getAccessTokenFromWeixin(corpId, secret string) (TokenSession AccessToken, err error) {
-	WxAccessTokenUrl := "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + corpId + "&corpsecret=" + secret
+func getAccessTokenFromWeixin(cropID, secret string) (TokenSession AccessToken, err error) {
+	WxAccessTokenURL := "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + cropID + "&corpsecret=" + secret
 
 	tr := &http.Transport{
 		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
 		DisableCompression: true,
 	}
 	client := &http.Client{Transport: tr}
-	result, err := client.Get(WxAccessTokenUrl)
+	result, err := client.Get(WxAccessTokenURL)
 	if err != nil {
 		return TokenSession, err
 	}
@@ -137,15 +144,16 @@ func getAccessTokenFromWeixin(corpId, secret string) (TokenSession AccessToken, 
 	}
 
 	if TokenSession.ExpiresIn == 0 || TokenSession.AccessToken == "" {
-		err = errors.New(fmt.Sprintf("获取微信错误代码: %v, 错误信息: %v", TokenSession.ErrCode, TokenSession.ErrMsg))
+		err = fmt.Errorf("获取微信错误代码: %v, 错误信息: %v", TokenSession.ErrCode, TokenSession.ErrMsg)
 		return TokenSession, err
 	}
 
 	return TokenSession, err
 }
 
-func JsonPost(url string, data interface{}) ([]byte, error) {
-	jsonBody, err := encodeJson(data)
+//JSONPost Post请求json数据
+func JSONPost(url string, data interface{}) ([]byte, error) {
+	jsonBody, err := encodeJSON(data)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +170,7 @@ func JsonPost(url string, data interface{}) ([]byte, error) {
 	return body, err
 }
 
-func encodeJson(v interface{}) ([]byte, error) {
+func encodeJSON(v interface{}) ([]byte, error) {
 	var buf bytes.Buffer
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)

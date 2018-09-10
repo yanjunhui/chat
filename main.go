@@ -22,18 +22,19 @@ import (
 //content := "[P0][OK][192.168.11.26_ofmon][][【critical】与主mysql同步延迟超过10s！ all(#3) seconds_behind_master port=3306 0>10][O1 2017-04-17 08:55:00]"
 
 var (
-	WorkPath       = GetWorkPath()
-	GetConfig      = goini.SetConfig(WorkPath + "config.conf")
-	corpId         = GetConfig.GetValue("weixin", "CorpID")
-	agentId        = GetConfig.GetValue("weixin", "AgentId")
-	secret         = GetConfig.GetValue("weixin", "Secret")
-	EncodingAESKey = GetConfig.GetValue("weixin", "EncodingAESKey")
+	//WorkPath 获取程序工作目录
+	WorkPath = GetWorkPath()
+	//Config 获取配置文件嘻嘻
+	Config  = goini.SetConfig(WorkPath + "config.conf")
+	corpID  = Config.GetValue("weixin", "CorpID")
+	agentID = Config.GetValue("weixin", "AgentId")
+	secret  = Config.GetValue("weixin", "Secret")
 
-	client *crop.CropClient
+	client *crop.Client
 )
 
 func init() {
-	client = crop.New(corpId, EncodingAESKey, StringToInt(agentId), secret)
+	client = crop.New(corpID, StringToInt(agentID), secret)
 }
 
 func main() {
@@ -42,7 +43,7 @@ func main() {
 	e.Use(middleware.Logger())
 	e.POST("/send", SendMsg)
 
-	port := GetConfig.GetValue("http", "port")
+	port := Config.GetValue("http", "port")
 	if port == "no value" {
 		e.Logger.Fatal(e.Start("0.0.0.0:4567"))
 	} else {
@@ -50,6 +51,7 @@ func main() {
 	}
 }
 
+//SendMsg 接受发送请求
 func SendMsg(ctx echo.Context) error {
 	toUser := ctx.FormValue("tos")
 	content := ctx.FormValue("content")
@@ -62,8 +64,8 @@ func SendMsg(ctx echo.Context) error {
 	if result != nil {
 		contentList := []string{}
 		for _, v := range result {
-			if len(v) == 3 && v[2] != ""  {
-				contentList = append(contentList, v[2])	
+			if len(v) == 3 && v[2] != "" {
+				contentList = append(contentList, v[2])
 			}
 		}
 		text = strings.Join(contentList, "\n")
@@ -74,18 +76,20 @@ func SendMsg(ctx echo.Context) error {
 	msg := crop.Message{}
 	msg.ToUser = toUser
 	msg.MsgType = "text"
-	msg.Text = crop.Content{text}
+	msg.Text = crop.Content{Content: text}
 
 	log.Printf("发送告警信息: %s, 接收用户: %s", content, toUser)
 
 	err := client.Send(msg)
 	if err != nil {
 		log.Println(err)
+		return ctx.String(200, err.Error())
 	}
 
 	return ctx.String(200, "ok")
 }
 
+//GetWorkPath 获取程序工作目录
 func GetWorkPath() string {
 	if file, err := exec.LookPath(os.Args[0]); err == nil {
 		return filepath.Dir(file) + "/"
