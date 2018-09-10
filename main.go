@@ -62,10 +62,8 @@ func SendMsg(ctx echo.Context) error {
 	if result != nil {
 		contentList := []string{}
 		for _, v := range result {
-			if len(v) == 3 {
-				if v[2] != "" {
-					contentList = append(contentList, v[2])
-				}
+			if len(v) == 3 && v[2] != ""  {
+				contentList = append(contentList, v[2])	
 			}
 		}
 		text = strings.Join(contentList, "\n")
