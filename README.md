@@ -29,11 +29,6 @@
     ![](images/AgentId.png)
     
     
-    进入 [接收消息] 设置
-    > 1. URL: 填写你服务器地址:端口/auth( 例如: http://yanjunhui.com:4567/auth )
-    > 2. Token: 随机获取(这个发送信息用不到,可忽略)
-    > 3. EncodingAESKey: 随机获取,就是我们在配置文件配置的 EncodingAESKey
-    
 3. 使用微信关注企业号才可以从微信收到信息,否则只能从微信企业号 APP 中收到信息
 	
 	![](images/关注.png)
