@@ -24,7 +24,7 @@ import (
 var (
 	//WorkPath 获取程序工作目录
 	WorkPath = GetWorkPath()
-	//Config 获取配置文件嘻嘻
+	//Config 获取配置文件信息
 	Config  = goini.SetConfig(WorkPath + "config.conf")
 	corpID  = Config.GetValue("weixin", "CorpID")
 	agentID = Config.GetValue("weixin", "AgentId")
