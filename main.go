@@ -45,7 +45,7 @@ func main() {
 
 	port := Config.GetValue("http", "port")
 	address := Config.GetValue("http", "address")
-	if port == "no value" {
+	if port == "no value" || address == "no value" {
 		e.Logger.Fatal(e.Start("0.0.0.0:4567"))
 	} else {
 		e.Logger.Fatal(e.Start(address + ":" + port))
