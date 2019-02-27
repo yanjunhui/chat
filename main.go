@@ -1,108 +1,49 @@
 package main
 
 import (
-	"log"
-
-	"regexp"
-
-	"os"
-	"os/exec"
-	"path/filepath"
-
-	"strconv"
-
-	"strings"
-
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
 	"github.com/yanjunhui/chat/crop"
-	"github.com/yanjunhui/goini"
+	"log"
 )
 
 //content := "[P0][OK][192.168.11.26_ofmon][][【critical】与主mysql同步延迟超过10s！ all(#3) seconds_behind_master port=3306 0>10][O1 2017-04-17 08:55:00]"
 
 var (
-	//WorkPath 获取程序工作目录
-	WorkPath = GetWorkPath()
-	//Config 获取配置文件信息
-	Config  = goini.SetConfig(WorkPath + "config.conf")
-	corpID  = Config.GetValue("weixin", "CorpID")
-	agentID = Config.GetValue("weixin", "AgentId")
-	secret  = Config.GetValue("weixin", "Secret")
+	//微信企业号配置相关
+
+	//corpID 微信企业号CropID
+	corpID = "wwc84919127e378d9a"
+
+	//EncodingAESKey 微信企业号加密Key
+	EncodingAESKey = "P8uAU2eYOcCtXtrRCNv3iKxzc5HW6GcKI2Ri1slR3Ih"
+
 
 	client *crop.Client
 )
 
 func init() {
-	client = crop.New(corpID, StringToInt(agentID), secret)
+	client = crop.New(corpID, 1000008, "Hw7Cw_xxqU78NPC9vfRhC0VQ9oBDtYO52W-4T8wt_3A")
+
 }
 
 func main() {
-
-	e := echo.New()
-	e.Use(middleware.Logger())
-	e.POST("/send", SendMsg)
-
-	port := Config.GetValue("http", "port")
-	address := Config.GetValue("http", "address")
-	if port == "no value" || address == "no value" {
-		e.Logger.Fatal(e.Start("0.0.0.0:4567"))
-	} else {
-		e.Logger.Fatal(e.Start(address + ":" + port))
-	}
-}
-
-//SendMsg 接受发送请求
-func SendMsg(ctx echo.Context) error {
-	toUser := ctx.FormValue("tos")
-	content := ctx.FormValue("content")
-	toUser = strings.Replace(toUser, ",", "|", -1)
-
-	r := regexp.MustCompile(`(\[(.*?)])`)
-	result := r.FindAllStringSubmatch(content, -1)
-
-	text := ""
-	if result != nil {
-		contentList := []string{}
-		for _, v := range result {
-			if len(v) == 3 && v[2] != "" {
-				contentList = append(contentList, v[2])
-			}
-		}
-		text = strings.Join(contentList, "\n")
-	} else {
-		text = content
-	}
-
 	msg := crop.Message{}
-	msg.ToUser = toUser
+	msg.ToUser = "yanjunhui"
 	msg.MsgType = "text"
-	msg.Text = crop.Content{Content: text}
 
-	log.Printf("发送告警信息: %s, 接收用户: %s", content, toUser)
-
+	msg.Text = crop.Content{Content: "测试"}
 	err := client.Send(msg)
 	if err != nil {
 		log.Println(err)
-		return ctx.String(200, err.Error())
 	}
 
-	return ctx.String(200, "ok")
+	/*
+	for i := 0; i <= 60 ; i++{
+		msg.Text = crop.Content{Content: fmt.Sprintf("%d", i)}
+		err := client.Send(msg)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+	*/
 }
 
-//GetWorkPath 获取程序工作目录
-func GetWorkPath() string {
-	if file, err := exec.LookPath(os.Args[0]); err == nil {
-		return filepath.Dir(file) + "/"
-	}
-	return "./"
-}
-
-func StringToInt(s string) int {
-	n, err := strconv.Atoi(s)
-	if err != nil {
-		log.Printf("agent 类型转换失败, 请检查配置文件中 agentid 配置是否为纯数字(%v)", err)
-		return 0
-	}
-	return n
-}
