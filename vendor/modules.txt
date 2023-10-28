@@ -1,0 +1,42 @@
+# github.com/labstack/echo/v4 v4.11.2
+## explicit; go 1.17
+github.com/labstack/echo/v4
+# github.com/labstack/gommon v0.4.0
+## explicit; go 1.12
+github.com/labstack/gommon/color
+github.com/labstack/gommon/log
+# github.com/mattn/go-colorable v0.1.13
+## explicit; go 1.15
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.19
+## explicit; go 1.15
+github.com/mattn/go-isatty
+# github.com/valyala/bytebufferpool v1.0.0
+## explicit
+github.com/valyala/bytebufferpool
+# github.com/valyala/fasttemplate v1.2.2
+## explicit; go 1.12
+github.com/valyala/fasttemplate
+# github.com/yanjunhui/chat v0.0.0-20221221022417-9117acc3e6e7
+## explicit
+github.com/yanjunhui/chat/crop
+# golang.org/x/crypto v0.14.0
+## explicit; go 1.17
+golang.org/x/crypto/acme
+golang.org/x/crypto/acme/autocert
+# golang.org/x/net v0.17.0
+## explicit; go 1.17
+golang.org/x/net/http/httpguts
+golang.org/x/net/http2
+golang.org/x/net/http2/h2c
+golang.org/x/net/http2/hpack
+golang.org/x/net/idna
+# golang.org/x/sys v0.13.0
+## explicit; go 1.17
+golang.org/x/sys/unix
+# golang.org/x/text v0.13.0
+## explicit; go 1.17
+golang.org/x/text/secure/bidirule
+golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm

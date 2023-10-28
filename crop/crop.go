@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,7 +19,7 @@ type Err struct {
 	ErrMsg  string `json:"errmsg"`
 }
 
-//AccessToken 微信企业号请求Token
+// AccessToken 微信企业号请求Token
 type AccessToken struct {
 	AccessToken string `json:"access_token"`
 	ExpiresIn   int    `json:"expires_in"`
@@ -26,7 +27,7 @@ type AccessToken struct {
 	ExpiresInTime time.Time
 }
 
-//Client 微信企业号应用配置信息
+// Client 微信企业号应用配置信息
 type Client struct {
 	CropID      string
 	AgentID     int
@@ -34,7 +35,7 @@ type Client struct {
 	Token       AccessToken
 }
 
-//Result 发送消息返回结果
+// Result 发送消息返回结果
 type Result struct {
 	Err
 	InvalidUser  string `json:"invaliduser"`
@@ -42,12 +43,12 @@ type Result struct {
 	InvalidTag   string `json:"invalidtag"`
 }
 
-//Content 文本消息内容
+// Content 文本消息内容
 type Content struct {
 	Content string `json:"content"`
 }
 
-//Message 消息主体参数
+// Message 消息主体参数
 type Message struct {
 	ToUser  string  `json:"touser"`
 	ToParty string  `json:"toparty"`
@@ -57,7 +58,7 @@ type Message struct {
 	Text    Content `json:"text"`
 }
 
-//New 实例化微信企业号应用
+// New 实例化微信企业号应用
 func New(cropID string, agentID int, AgentSecret string) *Client {
 
 	c := new(Client)
@@ -67,7 +68,7 @@ func New(cropID string, agentID int, AgentSecret string) *Client {
 	return c
 }
 
-//Send 发送信息
+// Send 发送信息
 func (c *Client) Send(msg Message) error {
 
 	c.GetAccessToken()
@@ -104,7 +105,7 @@ func (c *Client) Send(msg Message) error {
 	return err
 }
 
-//GetAccessToken 获取回话token
+// GetAccessToken 获取回话token
 func (c *Client) GetAccessToken() {
 	var err error
 	if c.Token.AccessToken == "" || c.Token.ExpiresInTime.Before(time.Now()) {
@@ -117,7 +118,7 @@ func (c *Client) GetAccessToken() {
 	}
 }
 
-//从微信服务器获取token
+// 从微信服务器获取token
 func getAccessTokenFromWeixin(cropID, secret string) (TokenSession AccessToken, err error) {
 	WxAccessTokenURL := "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + cropID + "&corpsecret=" + secret
 
@@ -131,7 +132,7 @@ func getAccessTokenFromWeixin(cropID, secret string) (TokenSession AccessToken, 
 		return TokenSession, err
 	}
 
-	res, err := ioutil.ReadAll(result.Body)
+	res, err := io.ReadAll(result.Body)
 	if err != nil {
 		return TokenSession, err
 	}
@@ -151,7 +152,7 @@ func getAccessTokenFromWeixin(cropID, secret string) (TokenSession AccessToken, 
 	return TokenSession, err
 }
 
-//JSONPost Post请求json数据
+// JSONPost Post请求json数据
 func JSONPost(url string, data interface{}) ([]byte, error) {
 	jsonBody, err := encodeJSON(data)
 	if err != nil {
